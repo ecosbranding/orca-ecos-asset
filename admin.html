@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ECOS Admin | Gestión</title>
+    <title>ECOS Admin | Único</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,7 +20,6 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .container { width: 90%; max-width: 380px; text-align: center; }
         
-        /* Logo de marca: círculo rosa con logo blanco */
         .brand-circle {
             width: 100px; height: 100px; background: var(--ecos-pink);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -28,9 +27,8 @@
         }
         .circle-logo { width: 60%; }
 
-        .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; }
+        .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; position: relative; }
         
-        /* Contenedor del escáner con borde de marca */
         #reader { 
             width: 100%; 
             border-radius: 20px; 
@@ -38,17 +36,34 @@
             border: 2px solid var(--ecos-pink) !important; 
             background: #000; 
         }
-        
-        /* Ajuste para que el video no se vea estirado */
-        #reader video { object-fit: cover !important; }
 
-        .status-box { margin-top: 20px; padding: 15px; border-radius: 15px; background: #111; font-size: 0.9rem; border: 1px solid #222; }
-        
-        .btn-add { 
+        /* Overlay para indicar que el escáner está pausado */
+        #scanner-overlay {
+            display: none;
+            position: absolute;
+            top: 25px; left: 25px; right: 25px; bottom: 105px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 20px;
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .status-box { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border-radius: 15px; 
+            background: #111; 
+            font-size: 0.95rem; 
+            border: 1px solid #222;
+        }
+
+        .btn-next { 
             background: var(--ecos-pink); 
             color: #fff; 
             border: none; 
-            padding: 18px; 
+            padding: 15px; 
             border-radius: 12px; 
             width: 100%; 
             font-weight: bold; 
@@ -56,77 +71,80 @@
             display: none; 
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="brand-circle">
-            <img src="ecos-logo-white.png" class="circle-logo" alt="Logo ECOS">
+            <img src="ecos-logo-white.png" class="circle-logo" alt="Logo">
         </div>
-        <h2 style="letter-spacing: 2px; font-weight: 300; margin-bottom: 25px;">ADMIN PANEL</h2>
+        <h2 style="letter-spacing: 2px; font-weight: 300; margin-bottom: 25px;">SISTEMA DE SELLOS</h2>
         
         <div class="card">
+            <div id="scanner-overlay">
+                <span style="color:#4CAF50; font-size: 3rem;">✓</span>
+                <p>Procesado</p>
+            </div>
             <div id="reader"></div>
             <div class="status-box" id="status">Iniciando cámara trasera...</div>
-            <button id="addBtn" class="btn-add" onclick="addStamp()">+ ASIGNAR SELLO</button>
+            <button id="nextBtn" class="btn-next" onclick="resetScanner()">Siguiente Cliente</button>
         </div>
         
-        <p style="font-size: 0.7rem; color: #444; margin-top: 25px; letter-spacing: 1px;">ORCA STUDIOS • SISTEMA DE ACTIVOS</p>
+        <p style="font-size: 0.7rem; color: #444; margin-top: 25px; letter-spacing: 1px;">ORCA STUDIOS • SEGURIDAD ACTIVA</p>
     </div>
 
     <script>
-        // === CONFIGURACIÓN FIREBASE ===
         const firebaseConfig = { databaseURL: "https://ecos-loyalty-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let activePhone = null;
+        let canScan = true; 
 
         function onScanSuccess(decodedText) {
-            activePhone = decodedText;
-            const statusEl = document.getElementById('status');
-            statusEl.innerHTML = `Cliente: <b>${activePhone}</b>`;
-            statusEl.style.color = "#ff5a81";
-            document.getElementById('addBtn').style.display = "block";
+            if (!canScan) return; 
             
-            if (navigator.vibrate) navigator.vibrate(100);
+            canScan = false; // Bloquea escaneos futuros inmediatamente
+            const activePhone = decodedText;
+            const statusEl = document.getElementById('status');
+            const overlay = document.getElementById('scanner-overlay');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            statusEl.innerHTML = `Asignando a: <b style="color:#ff5a81">${activePhone}</b>...`;
+            
+            const ref = db.ref('ecos_users/' + activePhone + '/stamps');
+            ref.transaction((current) => (current || 0) + 1, (error, committed) => {
+                if (committed) {
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                    
+                    statusEl.innerHTML = `<span style="color:#4CAF50; font-weight:bold;">¡SELLO OTORGADO!</span>`;
+                    overlay.style.display = 'flex'; // Muestra bloqueo visual sobre la cámara
+                    nextBtn.style.display = 'block'; // Muestra botón para rehabilitar
+                } else {
+                    canScan = true;
+                    statusEl.innerText = "Error. Reintenta.";
+                }
+            });
         }
 
-        // === LÓGICA DE CÁMARA TRASERA EXCLUSIVA ===
-        const html5QrCode = new Html5Qrcode("reader");
-        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+        function resetScanner() {
+            canScan = true;
+            document.getElementById('scanner-overlay').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('status').innerText = "Esperando próximo cliente...";
+            document.getElementById('status').style.color = "#fff";
+        }
 
-        // Forzamos el uso de la cámara trasera (environment) para evitar el error NotReadable
+        const html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start(
             { facingMode: "environment" }, 
-            qrConfig, 
+            { fps: 15, qrbox: { width: 250, height: 250 } }, 
             onScanSuccess
         ).then(() => {
-            document.getElementById('status').innerText = "Esperando escaneo de cliente...";
-        }).catch((err) => {
-            console.error(err);
-            document.getElementById('status').innerHTML = 
-                `<span style="color:#ff5a81">Error de acceso.</span><br>Toca el candado arriba y permite la Cámara.`;
+            document.getElementById('status').innerText = "Listo para escanear";
+        }).catch(err => {
+            document.getElementById('status').innerText = "Permite el acceso a la cámara.";
         });
-
-        function addStamp() {
-            if(!activePhone) return;
-            const ref = db.ref('ecos_users/' + activePhone + '/stamps');
-            ref.transaction((current) => (current || 0) + 1);
-            
-            alert("Sello asignado con éxito a: " + activePhone);
-            
-            document.getElementById('addBtn').style.display = "none";
-            document.getElementById('status').innerText = "Esperando escaneo de cliente...";
-            document.getElementById('status').style.color = "#fff";
-            activePhone = null;
-        }
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
     </script>
 </body>
 </html>
