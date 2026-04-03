@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECOS Admin | Scanner</title>
+    <title>ECOS Admin | Gestión</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #reader { width: 100%; max-width: 400px; border-radius: 20px; overflow: hidden; border: 2px solid #dd2a7b; margin-top: 20px; }
-        .status-box { margin-top: 30px; padding: 20px; background: #0a0a0a; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1a1a1a; }
-        h2 { color: #dd2a7b; letter-spacing: 2px; font-size: 1rem; }
+        body { background: #f8f8f8; color: #000; font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .header { background: #fff; width: 100%; max-width: 500px; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .logo-admin { width: 140px; margin-bottom: 10px; }
+        #reader { width: 100%; max-width: 450px; border-radius: 25px; overflow: hidden; border: none !important; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .status { margin-top: 25px; font-weight: 700; color: #ff5a81; text-transform: uppercase; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-    <h2>ECOS | PANEL DE SELLADO</h2>
+    <div class="header">
+        <img src="https://i.ibb.co/4T5V9pB/ecos-horizontal-black.png" class="logo-admin" alt="ECOS">
+        <p style="font-size: 0.9rem; color: #888;">PANEL DE AUTORIZACIÓN DIGITAL</p>
+    </div>
+    
     <div id="reader"></div>
-    <div class="status-box" id="scannedInfo">Esperando código QR...</div>
+    <div class="status" id="msg">Escaneando activos...</div>
 
     <script>
         const firebaseConfig = { databaseURL: "https://ecos-loyalty-default-rtdb.firebaseio.com" };
@@ -25,21 +30,18 @@
         const db = firebase.database();
 
         function onScanSuccess(decodedText) {
-            document.getElementById('scannedInfo').innerHTML = `<p style="color:#0f0">CLIENTE DETECTADO: ${decodedText}</p><p>Procesando sello de autor...</p>`;
-            
-            const userRef = db.ref('users/' + decodedText);
-            userRef.get().then((snapshot) => {
-                let current = snapshot.val() || 0;
+            const userRef = db.ref('ecos_users/' + decodedText);
+            userRef.get().then((snap) => {
+                let current = snap.val() || 0;
                 if(current < 8) {
                     userRef.set(current + 1);
-                    alert("¡SELLO APLICADO CON ÉXITO!");
-                } else {
-                    alert("Este cliente ya completó su tarjeta.");
+                    document.getElementById('msg').innerText = `Sello exitoso para: ${decodedText}`;
+                    if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 }
             });
         }
 
-        let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+        let scanner = new Html5QrcodeScanner("reader", { fps: 20, qrbox: 280 });
         scanner.render(onScanSuccess);
     </script>
 </body>
