@@ -1,8 +1,8 @@
 {
   "name": "ECOS Admin",
   "short_name": "Admin",
-  "id": "/admin-app",
-  "start_url": "./admin.html?mode=admin",
+  "id": "ecos-admin-app-v2",
+  "start_url": "./admin.html?v=2",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff5a81",
@@ -11,7 +11,7 @@
       "src": "ecos-logo-white.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
