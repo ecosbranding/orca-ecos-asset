@@ -2,33 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECOS Admin | Control de Sellos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ECOS Admin | Gestión</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icono-blanco.png">
+    <link rel="manifest" href="admin-manifest.json">
+    <meta name="theme-color" content="#ff5a81">
+
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
     <style>
         :root { --ecos-pink: #ff5a81; --ecos-dark: #000; }
-        body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .admin-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; margin-bottom: 20px; }
-        .status-msg { padding: 15px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; display: none; font-size: 0.9rem; }
-        .success { background: rgba(0, 255, 100, 0.1); color: #00ff64; border: 1px solid #00ff64; }
-        .error { background: rgba(255, 0, 0, 0.1); color: #ff3c3c; border: 1px solid #ff3c3c; }
-        .btn-action { background: var(--ecos-pink); color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; display: none; }
+        body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .container { width: 90%; max-width: 380px; text-align: center; }
+        
+        /* Icono de Marca Rosa */
+        .brand-circle {
+            width: 100px; height: 100px; background: var(--ecos-pink);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; border: 3px solid #fff; box-shadow: 0 0 20px rgba(255, 90, 129, 0.4);
+        }
+        .circle-logo { width: 60%; }
+
+        .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; }
+        
+        /* Escáner */
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; background: #000; }
+        
+        .status-box { margin-top: 20px; padding: 15px; border-radius: 15px; background: #111; font-size: 0.9rem; }
+        .btn-add { background: var(--ecos-pink); color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
-
-    <div class="admin-card">
-        <img src="ecos-horizontal-pink.png" style="width: 120px; margin-bottom: 15px;">
-        <h3 style="font-weight: 400; margin-bottom: 20px;">Escanear Cliente</h3>
+    <div class="container">
+        <div class="brand-circle"><img src="icono-blanco.png" class="circle-logo"></div>
+        <h2 style="letter-spacing: 2px; font-weight: 300;">ADMIN PANEL</h2>
         
-        <div id="reader"></div>
+        <div class="card">
+            <div id="reader"></div>
+            <div class="status-box" id="status">Esperando escaneo de cliente...</div>
+            <button id="addBtn" class="btn-add" onclick="addStamp()">+ ASIGNAR SELLO</button>
+        </div>
         
-        <div id="msg" class="status-msg"></div>
-        
-        <button id="nextBtn" class="btn-action" onclick="resetScanner()">Escanear Siguiente</button>
+        <p style="font-size: 0.7rem; color: #444; margin-top: 20px;">ORCA STUDIOS • SISTEMA DE ACTIVOS</p>
     </div>
 
     <script>
@@ -36,61 +56,27 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const html5QrCode = new Html5Qrcode("reader");
-        let isProcessing = false; 
+        let activePhone = null;
 
-        const qrConfig = { fps: 15, qrbox: { width: 250, height: 250 } };
-
-        function startScanning() {
-            html5QrCode.start({ facingMode: "environment" }, qrConfig, (decodedText) => {
-                if (isProcessing) return; 
-                
-                isProcessing = true;
-                processStamp(decodedText);
-            });
+        function onScanSuccess(decodedText) {
+            activePhone = decodedText;
+            document.getElementById('status').innerHTML = `Cliente: <b>${activePhone}</b>`;
+            document.getElementById('status').style.color = "#ff5a81";
+            document.getElementById('addBtn').style.display = "block";
         }
 
-        function processStamp(phone) {
-            const userStampsRef = db.ref('ecos_users/' + phone + '/stamps');
-
-            // TRANSACCIÓN: Garantiza 1 por 1 y detiene en 8
-            userStampsRef.transaction((current) => {
-                if (current === null) return 1;
-                if (current >= 8) return; 
-                return (current || 0) + 1;
-            }, (error, committed, snapshot) => {
-                if (error) {
-                    showMsg("Error de red", "error");
-                    isProcessing = false;
-                } else if (!committed) {
-                    showMsg("Cliente ya completó 8 sellos", "error");
-                } else {
-                    const total = snapshot.val();
-                    showMsg(`Sello #${total} registrado para: ${phone}`, "success");
-                    
-                    // Bloqueo visual: obligamos a darle al botón para el siguiente
-                    document.getElementById('nextBtn').style.display = 'block';
-                    html5QrCode.pause(); 
-                }
-            });
+        function addStamp() {
+            if(!activePhone) return;
+            const ref = db.ref('ecos_users/' + activePhone + '/stamps');
+            ref.transaction((current) => (current || 0) + 1);
+            alert("Sello asignado con éxito a " + activePhone);
+            document.getElementById('addBtn').style.display = "none";
+            document.getElementById('status').innerText = "Esperando escaneo de cliente...";
+            document.getElementById('status').style.color = "#fff";
         }
 
-        function showMsg(text, type) {
-            const el = document.getElementById('msg');
-            el.innerText = text;
-            el.className = 'status-msg ' + type;
-            el.style.display = 'block';
-        }
-
-        function resetScanner() {
-            isProcessing = false;
-            document.getElementById('msg').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'none';
-            html5QrCode.resume();
-        }
-
-        // Iniciar al cargar
-        startScanning();
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
     </script>
 </body>
 </html>
