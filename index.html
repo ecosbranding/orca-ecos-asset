@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         :root { --ecos-pink: #ff5a81; --ecos-dark: #000; }
-        body { background: var(--ecos-dark); color: #fff; font-family: sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .container { width: 90%; max-width: 380px; text-align: center; }
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .main-logo { width: 160px; margin-bottom: 30px; }
@@ -19,16 +19,17 @@
         .slot img { width: 70%; height: 70%; display: none; }
         .slot.active img { display: block; }
         #qrcode { background: #fff; padding: 12px; border-radius: 15px; display: inline-block; margin-top: 20px; }
-        input { background: #151515; border: 1px solid #333; color: #fff; padding: 18px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
-        button { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 900; letter-spacing: 1px; cursor: pointer; }
+        .input-box { background: #151515; border: 1px solid #333; color: #fff; padding: 18px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 1rem; }
+        .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 900; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="loginSection">
             <img src="ecos-logo-white.png" class="main-logo" alt="ECOS">
-            <input type="tel" id="whatsapp" placeholder="WhatsApp (Ej: 0979010077)">
-            <button onclick="initCard()">Generar Tarjeta</button>
+            <input type="tel" id="whatsapp" class="input-box" placeholder="WhatsApp (Ej: 0979010077)">
+            <input type="password" id="pin" class="input-box" placeholder="PIN de 4 dígitos" maxlength="4" inputmode="numeric">
+            <button class="btn-main" onclick="accessSystem()">Ingresar</button>
         </div>
 
         <div id="cardSection" style="display:none" class="card">
@@ -44,16 +45,34 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function initCard() {
-            const num = document.getElementById('whatsapp').value;
-            if(!num) return alert("Ingresa tu número");
-            
+        async function accessSystem() {
+            const phone = document.getElementById('whatsapp').value;
+            const userPin = document.getElementById('pin').value;
+            if(!phone || userPin.length !== 4) return alert("Ingresa datos válidos");
+
+            const userRef = db.ref('ecos_users/' + phone);
+            const snap = await userRef.get();
+            const data = snap.val();
+
+            if(data) {
+                if(data.pin === userPin) {
+                    renderDashboard(phone, data.stamps || 0);
+                } else {
+                    alert("PIN Incorrecto");
+                }
+            } else {
+                await userRef.set({ pin: userPin, stamps: 0 });
+                renderDashboard(phone, 0);
+            }
+        }
+
+        function renderDashboard(phone, initialCount) {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('cardSection').style.display = 'block';
             
-            QRCode.toCanvas(document.getElementById('qrcode'), num, { width: 150, margin: 1 });
+            QRCode.toCanvas(document.getElementById('qrcode'), phone, { width: 150, margin: 1 });
             
-            db.ref('ecos_users/' + num).on('value', (snapshot) => {
+            db.ref('ecos_users/' + phone + '/stamps').on('value', (snapshot) => {
                 const count = snapshot.val() || 0;
                 const grid = document.getElementById('stampGrid');
                 grid.innerHTML = '';
