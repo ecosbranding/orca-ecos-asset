@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ECOS Admin | Único</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="ecos-logo-white.png">
     <link rel="manifest" href="admin-manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#ff5a81">
 
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -17,7 +15,7 @@
     
     <style>
         :root { --ecos-pink: #ff5a81; --ecos-dark: #000; }
-        body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
         .container { width: 90%; max-width: 380px; text-align: center; }
         
         .brand-circle {
@@ -29,69 +27,38 @@
 
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; position: relative; }
         
-        #reader { 
-            width: 100%; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            border: 2px solid var(--ecos-pink) !important; 
-            background: #000; 
-        }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; }
 
-        /* Overlay para indicar que el escáner está pausado */
+        /* Bloqueo visual tras escaneo exitoso */
         #scanner-overlay {
-            display: none;
-            position: absolute;
-            top: 25px; left: 25px; right: 25px; bottom: 105px;
-            background: rgba(0,0,0,0.8);
-            border-radius: 20px;
-            z-index: 10;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            display: none; position: absolute; top: 25px; left: 25px; right: 25px; bottom: 105px;
+            background: rgba(0,0,0,0.9); border-radius: 20px; z-index: 10;
+            align-items: center; justify-content: center; flex-direction: column;
         }
 
-        .status-box { 
-            margin-top: 20px; 
-            padding: 20px; 
-            border-radius: 15px; 
-            background: #111; 
-            font-size: 0.95rem; 
-            border: 1px solid #222;
-        }
+        .status-box { margin-top: 20px; padding: 20px; border-radius: 15px; background: #111; font-size: 0.95rem; border: 1px solid #222; }
 
         .btn-next { 
-            background: var(--ecos-pink); 
-            color: #fff; 
-            border: none; 
-            padding: 15px; 
-            border-radius: 12px; 
-            width: 100%; 
-            font-weight: bold; 
-            margin-top: 15px; 
-            display: none; 
-            cursor: pointer;
-            text-transform: uppercase;
+            background: var(--ecos-pink); color: #fff; border: none; padding: 15px; border-radius: 12px; 
+            width: 100%; font-weight: bold; margin-top: 15px; display: none; cursor: pointer; text-transform: uppercase;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="brand-circle">
-            <img src="ecos-logo-white.png" class="circle-logo" alt="Logo">
-        </div>
-        <h2 style="letter-spacing: 2px; font-weight: 300; margin-bottom: 25px;">SISTEMA DE SELLOS</h2>
+        <div class="brand-circle"><img src="ecos-logo-white.png" class="circle-logo"></div>
+        <h2 style="letter-spacing: 2px; font-weight: 300; margin-bottom: 25px;">ADMIN PANEL</h2>
         
         <div class="card">
             <div id="scanner-overlay">
-                <span style="color:#4CAF50; font-size: 3rem;">✓</span>
-                <p>Procesado</p>
+                <span style="color:#4CAF50; font-size: 3.5rem;">✓</span>
+                <p style="font-weight: bold; letter-spacing: 1px;">PROCESADO</p>
             </div>
             <div id="reader"></div>
-            <div class="status-box" id="status">Iniciando cámara trasera...</div>
-            <button id="nextBtn" class="btn-next" onclick="resetScanner()">Siguiente Cliente</button>
+            <div class="status-box" id="status">Cargando cámara trasera...</div>
+            <button id="nextBtn" class="btn-next" onclick="resetScanner()">Listo para siguiente</button>
         </div>
-        
-        <p style="font-size: 0.7rem; color: #444; margin-top: 25px; letter-spacing: 1px;">ORCA STUDIOS • SEGURIDAD ACTIVA</p>
+        <p style="font-size: 0.6rem; color: #333; margin-top: 20px;">ORCA STUDIOS • V.2.0 SEPARATED</p>
     </div>
 
     <script>
@@ -103,26 +70,25 @@
 
         function onScanSuccess(decodedText) {
             if (!canScan) return; 
-            
-            canScan = false; // Bloquea escaneos futuros inmediatamente
+            canScan = false; 
+
             const activePhone = decodedText;
             const statusEl = document.getElementById('status');
             const overlay = document.getElementById('scanner-overlay');
             const nextBtn = document.getElementById('nextBtn');
             
-            statusEl.innerHTML = `Asignando a: <b style="color:#ff5a81">${activePhone}</b>...`;
+            statusEl.innerHTML = `Validando: <b style="color:#ff5a81">${activePhone}</b>`;
             
             const ref = db.ref('ecos_users/' + activePhone + '/stamps');
             ref.transaction((current) => (current || 0) + 1, (error, committed) => {
                 if (committed) {
                     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                    
-                    statusEl.innerHTML = `<span style="color:#4CAF50; font-weight:bold;">¡SELLO OTORGADO!</span>`;
-                    overlay.style.display = 'flex'; // Muestra bloqueo visual sobre la cámara
-                    nextBtn.style.display = 'block'; // Muestra botón para rehabilitar
+                    statusEl.innerHTML = `<span style="color:#4CAF50">¡ÉXITO! SELLO ASIGNADO</span>`;
+                    overlay.style.display = 'flex';
+                    nextBtn.style.display = 'block';
                 } else {
                     canScan = true;
-                    statusEl.innerText = "Error. Reintenta.";
+                    statusEl.innerText = "Error de red. Reintenta.";
                 }
             });
         }
@@ -131,7 +97,7 @@
             canScan = true;
             document.getElementById('scanner-overlay').style.display = 'none';
             document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('status').innerText = "Esperando próximo cliente...";
+            document.getElementById('status').innerText = "Esperando código QR...";
             document.getElementById('status').style.color = "#fff";
         }
 
@@ -140,10 +106,8 @@
             { facingMode: "environment" }, 
             { fps: 15, qrbox: { width: 250, height: 250 } }, 
             onScanSuccess
-        ).then(() => {
-            document.getElementById('status').innerText = "Listo para escanear";
-        }).catch(err => {
-            document.getElementById('status').innerText = "Permite el acceso a la cámara.";
+        ).catch(err => {
+            document.getElementById('status').innerText = "Error: Cámara no disponible.";
         });
     </script>
 </body>
