@@ -3,33 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECOS Admin | Escáner de Sellos</title>
+    <title>ECOS Admin | Control de Sellos</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <style>
         :root { --ecos-pink: #ff5a81; --ecos-dark: #000; }
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .admin-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; width: 90%; max-width: 400px; text-align: center; }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; }
-        .status-msg { margin-top: 20px; padding: 15px; border-radius: 12px; font-weight: bold; display: none; }
+        .admin-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; margin-bottom: 20px; }
+        .status-msg { padding: 15px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; display: none; font-size: 0.9rem; }
         .success { background: rgba(0, 255, 100, 0.1); color: #00ff64; border: 1px solid #00ff64; }
         .error { background: rgba(255, 0, 0, 0.1); color: #ff3c3c; border: 1px solid #ff3c3c; }
-        .btn-reset { background: #111; color: #666; border: 1px solid #222; padding: 12px; border-radius: 10px; margin-top: 20px; cursor: pointer; width: 100%; }
+        .btn-action { background: var(--ecos-pink); color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; display: none; }
     </style>
 </head>
 <body>
 
     <div class="admin-card">
-        <img src="ecos-horizontal-pink.png" style="width: 120px; margin-bottom: 20px;">
-        <h2 style="font-weight: 400; margin-bottom: 5px;">Panel de Control</h2>
-        <p style="font-size: 0.8rem; color: #555; margin-bottom: 20px;">Escanea el QR del cliente para sumar 1 sello</p>
+        <img src="ecos-horizontal-pink.png" style="width: 120px; margin-bottom: 15px;">
+        <h3 style="font-weight: 400; margin-bottom: 20px;">Escanear Cliente</h3>
         
         <div id="reader"></div>
         
         <div id="msg" class="status-msg"></div>
-
-        <button class="btn-reset" onclick="location.reload()">Reiniciar Escáner</button>
+        
+        <button id="nextBtn" class="btn-action" onclick="resetScanner()">Escanear Siguiente</button>
     </div>
 
     <script>
@@ -38,47 +37,43 @@
         const db = firebase.database();
 
         const html5QrCode = new Html5Qrcode("reader");
-        let isProcessing = false; // Bloqueo para evitar múltiples lecturas seguidas
+        let isProcessing = false; 
 
-        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+        const qrConfig = { fps: 15, qrbox: { width: 250, height: 250 } };
 
-        html5QrCode.start({ facingMode: "environment" }, qrConfig, (decodedText) => {
-            if (isProcessing) return; // Si ya está procesando un sello, ignora el resto
-            
-            isProcessing = true;
-            showMsg("Procesando sello...", "success");
-
-            const userStampsRef = db.ref('ecos_users/' + decodedText + '/stamps');
-
-            // TRANSACCIÓN: Garantiza que solo se sume +1 y no se pase de 8
-            userStampsRef.transaction((currentValue) => {
-                // Si el usuario no existe o no tiene sellos, empezamos en 1
-                if (currentValue === null) return 1;
+        function startScanning() {
+            html5QrCode.start({ facingMode: "environment" }, qrConfig, (decodedText) => {
+                if (isProcessing) return; 
                 
-                // Si ya llegó al límite, no hace nada
-                if (currentValue >= 8) return; 
+                isProcessing = true;
+                processStamp(decodedText);
+            });
+        }
 
-                // Suma estrictamente uno
-                return (currentValue || 0) + 1;
+        function processStamp(phone) {
+            const userStampsRef = db.ref('ecos_users/' + phone + '/stamps');
+
+            // TRANSACCIÓN: Garantiza 1 por 1 y detiene en 8
+            userStampsRef.transaction((current) => {
+                if (current === null) return 1;
+                if (current >= 8) return; 
+                return (current || 0) + 1;
             }, (error, committed, snapshot) => {
                 if (error) {
-                    showMsg("Error de conexión", "error");
+                    showMsg("Error de red", "error");
                     isProcessing = false;
                 } else if (!committed) {
-                    showMsg("El cliente ya completó los 8 sellos", "error");
-                    // No desbloqueamos isProcessing para forzar el reinicio manual si deseas
+                    showMsg("Cliente ya completó 8 sellos", "error");
                 } else {
                     const total = snapshot.val();
-                    showMsg(`¡ÉXITO! Sello #${total} registrado para ${decodedText}`, "success");
+                    showMsg(`Sello #${total} registrado para: ${phone}`, "success");
                     
-                    // Pausa de 3 segundos antes de permitir otro escaneo para evitar errores
-                    setTimeout(() => {
-                        isProcessing = false;
-                        document.getElementById('msg').style.display = 'none';
-                    }, 3000);
+                    // Bloqueo visual: obligamos a darle al botón para el siguiente
+                    document.getElementById('nextBtn').style.display = 'block';
+                    html5QrCode.pause(); 
                 }
             });
-        });
+        }
 
         function showMsg(text, type) {
             const el = document.getElementById('msg');
@@ -86,6 +81,16 @@
             el.className = 'status-msg ' + type;
             el.style.display = 'block';
         }
+
+        function resetScanner() {
+            isProcessing = false;
+            document.getElementById('msg').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            html5QrCode.resume();
+        }
+
+        // Iniciar al cargar
+        startScanning();
     </script>
 </body>
 </html>
