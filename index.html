@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ECOS | Activo Digital</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ECOS">
+    <link rel="apple-touch-icon" href="icono-blanco.png">
+    <link rel="manifest" href="manifest.json">
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
     <style>
         :root { --ecos-pink: #ff5a81; --ecos-dark: #000; }
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-y: auto; }
         .container { width: 90%; max-width: 380px; text-align: center; padding: 20px 0; }
         
-        /* LOGO INICIO (Círculo Rosa) */
+        /* LOGO INICIO (Círculo Rosa con Brillo) */
         .brand-circle {
             width: 120px; height: 120px;
             background: var(--ecos-pink); border-radius: 50%;
@@ -21,38 +29,39 @@
             box-shadow: 0 0 25px rgba(255, 90, 129, 0.6);
         }
         
-        /* LOGO TRANSPARENTE LIMPIO */
         .circle-logo, .stamp-logo {
-            width: 60%; /* Ajuste de tamaño para que respire dentro del círculo */
+            width: 60%; 
             height: auto;
             object-fit: contain;
         }
         
-        /* TARJETA */
+        /* TARJETA DE LEALTAD */
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; width: 100%; box-sizing: border-box; }
         .card-logo-box { background: #fff; border-radius: 12px; padding: 10px; display: inline-block; margin-bottom: 20px; }
         .card-logo { width: 130px; }
         
-        /* SELLOS */
+        /* GRILLA DE SELLOS */
         .stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
         .slot { aspect-ratio: 1; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid #222; }
-        
-        /* ESTADOS DEL SELLO */
         .slot.active { background: var(--ecos-pink); border: none; }
+        
         .slot .stamp-logo { display: none; }
         .slot.active .stamp-logo { display: block; }
 
         .slot::before { content: attr(data-index); color: #333; font-weight: bold; position: absolute; }
         .slot.active::before { display: none; }
         
-        /* EXTRAS */
+        /* QR Y FORMULARIO */
         #qrcode-container { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; margin: 15px 0; }
-        .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 1rem; }
+        .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 1rem; outline: none; }
+        .input-box:focus { border-color: var(--ecos-pink); }
         .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* OVERLAY ÉXITO */
+        /* OVERLAY DE ÉXITO */
         #success-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .success-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 30px; width: 85%; text-align: center; }
+        
+        .footer { margin-top: 25px; font-size: 0.65rem; color: #444; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -69,7 +78,7 @@
     <div class="container">
         <div id="authPanel">
             <div class="brand-circle">
-                <img src="icono-blanco.png" class="circle-logo" alt="Logo ECOS">
+                <img src="icono-blanco.png" class="circle-logo" alt="Logo">
             </div>
             <h3 style="font-weight: 400; margin-bottom: 25px; letter-spacing: 1px;">Ingreso Exclusivo</h3>
             <input type="tel" id="userPhone" class="input-box" placeholder="WhatsApp">
@@ -87,10 +96,12 @@
             </div>
             <button class="btn-main" style="margin-top:20px; background:#111; border: 1px solid #222;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
-        <div style="margin-top: 25px; font-size: 0.65rem; color: #444;">Hecho por <span style="color: var(--ecos-pink); font-weight: bold;">ORCA Studios</span></div>
+
+        <div class="footer">Hecho por <span style="color: var(--ecos-pink); font-weight: bold;">ORCA Studios</span></div>
     </div>
 
     <script>
+        // Configuración Firebase
         const firebaseConfig = { databaseURL: "https://ecos-loyalty-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -127,13 +138,19 @@
                     const slot = document.createElement('div');
                     slot.className = 'slot' + (i < count ? ' active' : '');
                     slot.setAttribute('data-index', i + 1);
-                    /* Imagen insertada de forma nativa con el nuevo PNG */
-                    slot.innerHTML = `<img src="icono-blanco.png" class="stamp-logo" alt="Sello ECOS">`;
+                    slot.innerHTML = `<img src="icono-blanco.png" class="stamp-logo">`;
                     grid.appendChild(slot);
                 }
                 if(count >= 8) {
                     setTimeout(() => { document.getElementById('success-overlay').style.display = 'flex'; }, 600);
                 }
+            });
+        }
+
+        // Registro de Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error', err));
             });
         }
     </script>
