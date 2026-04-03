@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ECOS Admin | Gestión</title>
+    <title>ECOS Admin</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icono-blanco.png">
+    <link rel="apple-touch-icon" href="ecos-logo-white.png">
     <link rel="manifest" href="admin-manifest.json">
     <meta name="theme-color" content="#ff5a81">
 
@@ -20,7 +20,7 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .container { width: 90%; max-width: 380px; text-align: center; }
         
-        /* Icono de Marca Rosa */
+        /* Logo Circular Rosa (Look Nativo) */
         .brand-circle {
             width: 100px; height: 100px; background: var(--ecos-pink);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -30,17 +30,17 @@
 
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; }
         
-        /* Escáner */
+        /* Escáner con borde de marca */
         #reader { width: 100%; border-radius: 20px; overflow: hidden; border: 2px solid var(--ecos-pink) !important; background: #000; }
         
         .status-box { margin-top: 20px; padding: 15px; border-radius: 15px; background: #111; font-size: 0.9rem; }
-        .btn-add { background: var(--ecos-pink); color: #fff; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; margin-top: 15px; display: none; }
+        .btn-add { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: bold; margin-top: 15px; display: none; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="brand-circle"><img src="icono-blanco.png" class="circle-logo"></div>
-        <h2 style="letter-spacing: 2px; font-weight: 300;">ADMIN PANEL</h2>
+        <div class="brand-circle"><img src="ecos-logo-white.png" class="circle-logo"></div>
+        <h2 style="letter-spacing: 2px; font-weight: 300; margin-bottom: 20px;">ADMIN PANEL</h2>
         
         <div class="card">
             <div id="reader"></div>
@@ -48,7 +48,7 @@
             <button id="addBtn" class="btn-add" onclick="addStamp()">+ ASIGNAR SELLO</button>
         </div>
         
-        <p style="font-size: 0.7rem; color: #444; margin-top: 20px;">ORCA STUDIOS • SISTEMA DE ACTIVOS</p>
+        <p style="font-size: 0.7rem; color: #444; margin-top: 25px; letter-spacing: 1px;">ORCA STUDIOS • SISTEMA DE ACTIVOS</p>
     </div>
 
     <script>
@@ -77,6 +77,10 @@
 
         const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
         html5QrcodeScanner.render(onScanSuccess);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
     </script>
 </body>
 </html>
