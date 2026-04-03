@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECOS Admin | Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; border-radius: 20px; overflow: hidden; border: 2px solid #dd2a7b; margin-top: 20px; }
+        .status-box { margin-top: 30px; padding: 20px; background: #0a0a0a; border-radius: 15px; width: 100%; max-width: 360px; border: 1px solid #1a1a1a; }
+        h2 { color: #dd2a7b; letter-spacing: 2px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <h2>ECOS | PANEL DE SELLADO</h2>
+    <div id="reader"></div>
+    <div class="status-box" id="scannedInfo">Esperando código QR...</div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://ecos-loyalty-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function onScanSuccess(decodedText) {
+            document.getElementById('scannedInfo').innerHTML = `<p style="color:#0f0">CLIENTE DETECTADO: ${decodedText}</p><p>Procesando sello de autor...</p>`;
+            
+            const userRef = db.ref('users/' + decodedText);
+            userRef.get().then((snapshot) => {
+                let current = snapshot.val() || 0;
+                if(current < 8) {
+                    userRef.set(current + 1);
+                    alert("¡SELLO APLICADO CON ÉXITO!");
+                } else {
+                    alert("Este cliente ya completó su tarjeta.");
+                }
+            });
+        }
+
+        let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+        scanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
