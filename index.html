@@ -12,60 +12,45 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-y: auto; }
         .container { width: 90%; max-width: 380px; text-align: center; padding: 20px 0; }
         
-        /* CORRECCIÓN LOGO INICIO (Imagen 15) */
+        /* LOGO INICIO (Círculo Rosa) */
         .brand-circle {
-            width: 120px;
-            height: 120px;
-            background: var(--ecos-pink);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 30px;
-            border: 3px solid #fff;
-            box-shadow: 0 0 25px rgba(255, 90, 129, 0.6); /* Brillo rosa */
-            position: relative;
+            width: 120px; height: 120px;
+            background: var(--ecos-pink); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 30px; border: 3px solid #fff;
+            box-shadow: 0 0 25px rgba(255, 90, 129, 0.6);
         }
         
-        /* MÁSCARA CSS PARA EL LOGO DEL INICIO */
-        .circle-logo {
-            width: 65%;
-            height: 65%;
-            background-color: #fff; /* Color final del logo */
-            -webkit-mask: url('ecos-logo-white.png') no-repeat center / contain;
-            mask: url('ecos-logo-white.png') no-repeat center / contain;
+        /* LOGO TRANSPARENTE LIMPIO */
+        .circle-logo, .stamp-logo {
+            width: 60%; /* Ajuste de tamaño para que respire dentro del círculo */
+            height: auto;
+            object-fit: contain;
         }
         
-        /* CARD UI (Imagen 16) */
+        /* TARJETA */
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; width: 100%; box-sizing: border-box; }
         .card-logo-box { background: #fff; border-radius: 12px; padding: 10px; display: inline-block; margin-bottom: 20px; }
         .card-logo { width: 130px; }
         
-        /* CORRECCIÓN SELLOS DE LA TARJETA (Imagen 16) */
+        /* SELLOS */
         .stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
-        .slot { aspect-ratio: 1; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid #222; overflow: hidden; }
+        .slot { aspect-ratio: 1; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid #222; }
         
-        /* LOGO DENTRO DE CADA CASILLA ACTIVA CON MÁSCARA */
+        /* ESTADOS DEL SELLO */
         .slot.active { background: var(--ecos-pink); border: none; }
-        .slot .icon-mask {
-            display: none;
-            width: 60%;
-            height: 60%;
-            background-color: #fff; /* Color del logo */
-            -webkit-mask: url('ecos-logo-white.png') no-repeat center / contain;
-            mask: url('ecos-logo-white.png') no-repeat center / contain;
-        }
-        .slot.active .icon-mask { display: block; }
+        .slot .stamp-logo { display: none; }
+        .slot.active .stamp-logo { display: block; }
 
         .slot::before { content: attr(data-index); color: #333; font-weight: bold; position: absolute; }
         .slot.active::before { display: none; }
         
+        /* EXTRAS */
         #qrcode-container { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; margin: 15px 0; }
         .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 1rem; }
         .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
-        .footer { margin-top: 25px; font-size: 0.65rem; color: #444; letter-spacing: 1px; }
         
-        /* Overlay Felicitaciones */
+        /* OVERLAY ÉXITO */
         #success-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .success-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 30px; width: 85%; text-align: center; }
     </style>
@@ -83,7 +68,9 @@
 
     <div class="container">
         <div id="authPanel">
-            <div class="brand-circle"><div class="circle-logo"></div></div>
+            <div class="brand-circle">
+                <img src="icono-blanco.png" class="circle-logo" alt="Logo ECOS">
+            </div>
             <h3 style="font-weight: 400; margin-bottom: 25px; letter-spacing: 1px;">Ingreso Exclusivo</h3>
             <input type="tel" id="userPhone" class="input-box" placeholder="WhatsApp">
             <input type="password" id="userPin" class="input-box" placeholder="PIN de 4 dígitos" maxlength="4">
@@ -100,7 +87,7 @@
             </div>
             <button class="btn-main" style="margin-top:20px; background:#111; border: 1px solid #222;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
-        <div class="footer">Hecho por <span style="color: var(--ecos-pink); font-weight: bold;">ORCA Studios</span></div>
+        <div style="margin-top: 25px; font-size: 0.65rem; color: #444;">Hecho por <span style="color: var(--ecos-pink); font-weight: bold;">ORCA Studios</span></div>
     </div>
 
     <script>
@@ -140,7 +127,8 @@
                     const slot = document.createElement('div');
                     slot.className = 'slot' + (i < count ? ' active' : '');
                     slot.setAttribute('data-index', i + 1);
-                    slot.innerHTML = `<div class="icon-mask"></div>`; // Logo con máscara en cada sello
+                    /* Imagen insertada de forma nativa con el nuevo PNG */
+                    slot.innerHTML = `<img src="icono-blanco.png" class="stamp-logo" alt="Sello ECOS">`;
                     grid.appendChild(slot);
                 }
                 if(count >= 8) {
