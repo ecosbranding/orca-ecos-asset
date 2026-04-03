@@ -12,28 +12,29 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-y: auto; }
         .container { width: 90%; max-width: 380px; text-align: center; padding: 20px 0; }
         
-        /* Card & Design */
+        /* Tarjeta de Fidelidad */
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; box-sizing: border-box; }
         .rounded-logo-box { background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 15px; display: inline-block; margin-bottom: 20px; }
         .card-logo { width: 130px; }
         
-        /* Grid de Sellos - Corrección Visual */
+        /* Cuadrícula de Sellos */
         .stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
-        .slot { aspect-ratio: 1; background: #111; border-radius: 50%; border: 1px solid #222; display: flex; align-items: center; justify-content: center; position: relative; }
+        .slot { aspect-ratio: 1; background: #111; border-radius: 50%; border: 1px solid #222; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
         .slot.active { background: var(--ecos-pink); border: none; }
         
-        /* Números para casillas vacías (Imagen 31/32) */
+        /* Números para casillas vacías */
         .slot::before { content: attr(data-index); color: #333; font-size: 1.1rem; font-weight: bold; position: absolute; }
         .slot.active::before { display: none; }
         
-        /* Logo Blanco - Corrección de Cuadros Blancos */
-        .slot img { width: 60%; display: none; object-fit: contain; }
+        /* Logo Blanco - Corrección de cuadros blancos */
+        .slot img { width: 65%; display: none; position: relative; z-index: 2; }
         .slot.active img { display: block; }
         
-        /* QR */
+        /* QR UI */
         #qrcode-container { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; margin: 10px 0; }
+        canvas { display: block !important; }
         
-        /* UI Elements */
+        /* Interfaz */
         .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; }
         .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; }
         .footer { margin-top: 25px; font-size: 0.65rem; color: #444; }
@@ -42,8 +43,8 @@
 <body>
     <div class="container">
         <div id="authPanel">
-            <h3 style="font-weight: 400;">Tarjeta de Fidelidad</h3>
-            <input type="tel" id="userPhone" class="input-box" placeholder="WhatsApp (09...)">
+            <h3 style="font-weight: 400; margin-bottom: 20px;">Tarjeta de Fidelidad</h3>
+            <input type="tel" id="userPhone" class="input-box" placeholder="WhatsApp (Ej: 0979010077)">
             <input type="password" id="userPin" class="input-box" placeholder="PIN de 4 dígitos" maxlength="4">
             <button class="btn-main" onclick="accessSystem()">Ingresar</button>
         </div>
@@ -54,11 +55,11 @@
                     <img src="ecos-horizontal-pink.png" class="card-logo">
                 </div>
                 <div class="stamp-grid" id="stampGrid"></div>
-                <p id="counterLabel" style="color: var(--ecos-pink); font-weight: bold; font-size: 0.9rem;">0 de 8 sellos</p>
+                <p id="counterLabel" style="color: var(--ecos-pink); font-weight: bold; font-size: 0.9rem;">0 de 8 sellos de autor</p>
                 <div id="qrcode-container"><canvas id="qr-canvas"></canvas></div>
                 <p style="color:#444; font-size:0.6rem; font-weight:bold;">VISIÓN • IMPACTO • PERMANENCIA</p>
             </div>
-            <button class="btn-main" style="margin-top:20px; background:#111;" onclick="location.reload()">Cerrar Sesión</button>
+            <button class="btn-main" style="margin-top:20px; background:#111; border: 1px solid #222;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
         <div class="footer">Hecho por <span>ORCA Studios</span></div>
     </div>
@@ -67,12 +68,10 @@
         const firebaseConfig = { databaseURL: "https://ecos-loyalty-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        let sessionActive = true; // Control de seguridad para un solo sello por ingreso
 
         function accessSystem() {
             const phone = document.getElementById('userPhone').value;
-            if(phone.length < 9) return alert("Número inválido");
+            if(phone.length < 9) return alert("Número incompleto");
 
             document.getElementById('authPanel').style.display = 'none';
             document.getElementById('cardPanel').style.display = 'block';
@@ -80,11 +79,9 @@
 
             const userRef = db.ref('ecos_users/' + phone);
 
-            // Listener en tiempo real
+            // Escucha activa de sellos
             userRef.child('stamps').on('value', (snap) => {
                 const count = snap.val() || 0;
-                
-                // Actualizar contador visual
                 document.getElementById('counterLabel').innerText = `${count} de 8 sellos de autor`;
                 
                 const grid = document.getElementById('stampGrid');
@@ -94,14 +91,10 @@
                     const slot = document.createElement('div');
                     slot.className = 'slot' + (i < count ? ' active' : '');
                     slot.setAttribute('data-index', i + 1);
-                    // Corrección del cuadro blanco: Usar logo con fondo transparente
-                    slot.innerHTML = '<img src="Ecos-logo-white.png">'; 
+                    
+                    // Nombre de archivo corregido a minúsculas
+                    slot.innerHTML = '<img src="ecos-logo-white.png">'; 
                     grid.appendChild(slot);
-                }
-
-                // Lógica de bloqueo: Si detecta un aumento mientras la sesión está abierta
-                if (count > 0 && sessionActive) {
-                    // Aquí podrías lanzar un mensaje: "Sello registrado. Reinicia para el siguiente."
                 }
             });
         }
