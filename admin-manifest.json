@@ -1,8 +1,17 @@
 {
   "name": "ECOS Admin",
   "short_name": "Admin",
-  "start_url": "./admin.html",
-  "scope": "./admin.html",
+  "id": "/admin-app",
+  "start_url": "./admin.html?mode=admin",
   "display": "standalone",
-  "icons": [ { "src": "icono-blanco.png", "sizes": "512x512", "type": "image/png" } ]
+  "background_color": "#000000",
+  "theme_color": "#ff5a81",
+  "icons": [
+    {
+      "src": "ecos-logo-white.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
