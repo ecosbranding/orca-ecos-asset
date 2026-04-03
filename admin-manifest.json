@@ -1,15 +1,8 @@
 {
   "name": "ECOS Admin",
-  "short_name": "ECOS Admin",
-  "start_url": "admin.html",
+  "short_name": "Admin",
+  "start_url": "./admin.html",
+  "scope": "./admin.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#ff5a81",
-  "icons": [
-    {
-      "src": "icono-blanco.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "icons": [ { "src": "icono-blanco.png", "sizes": "512x512", "type": "image/png" } ]
 }
