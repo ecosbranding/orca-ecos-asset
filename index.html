@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ECOS | Activo Digital</title>
     
-    <meta name="application-name" content="ECOS Loyal">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ECOS Loyal">
     
     <link rel="apple-touch-icon" href="icono-blanco.png">
+    
     <link rel="manifest" href="manifest.json">
     
     <meta name="theme-color" content="#ff5a81">
@@ -24,12 +24,11 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-y: auto; }
         .container { width: 90%; max-width: 380px; text-align: center; padding: 20px 0; }
         
-        /* === LOGO INICIO (Círculo Rosa de Marca) === */
-        /* Replicamos la estética limpia y nítida de tu diseño */
+        /* LOGO INICIO (Círculo Rosa con Brillo) */
         .brand-circle {
             width: 120px;
             height: 120px;
-            background: var(--ecos-pink); /* Fondo color marca */
+            background: var(--ecos-pink); /* Fondo color marca (Rosa) */
             border-radius: 50%; /* Círculo perfecto */
             display: flex;
             align-items: center;
@@ -47,7 +46,7 @@
             object-fit: contain;
         }
         
-        /* Tarjeta de Lealtad */
+        /* Tarjeta de Fidelidad */
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; box-sizing: border-box; }
         .card-logo-box { background: #fff; border-radius: 12px; padding: 10px; display: inline-block; margin-bottom: 20px; }
         .card-logo { width: 130px; }
@@ -57,7 +56,7 @@
         .slot { aspect-ratio: 1; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid #222; overflow: hidden; }
         .slot.active { background: var(--ecos-pink); border: none; }
         
-        /* Logo blanco dentro de cada casilla */
+        /* Logo blanco dentro de cada casilla activa */
         .slot img { width: 60%; display: none; }
         .slot.active img { display: block; }
 
@@ -175,7 +174,7 @@
         }
 
         // === REGISTRO DEL SERVICE WORKER (Para PWA) ===
-        // Esto es necesario para que aparezca la opción de "Instalar" en Android/Chrome.
+        // Obligatorio para que aparezca la opción de "Instalar" en Android/Chrome.
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error', err));
