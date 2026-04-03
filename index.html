@@ -12,6 +12,11 @@
         body { background: var(--ecos-dark); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-y: auto; }
         .container { width: 90%; max-width: 380px; text-align: center; padding: 20px 0; }
         
+        /* CORRECCIÓN LOGO INICIO (Login) */
+        .login-logo-box { background: rgba(255, 255, 255, 0.03); border-radius: 20px; padding: 20px; display: inline-block; margin-bottom: 25px; border: 1px solid #1a1a1a; }
+        .login-logo { width: 150px; display: block; filter: brightness(1.1); }
+        
+        /* Tarjeta de Fidelidad */
         .card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); width: 100%; box-sizing: border-box; }
         .rounded-logo-box { background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 15px; display: inline-block; margin-bottom: 20px; }
         .card-logo { width: 130px; }
@@ -20,35 +25,44 @@
         .slot { aspect-ratio: 1; background: #111; border-radius: 50%; border: 1px solid #222; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
         .slot.active { background: var(--ecos-pink); border: none; }
         
+        /* Números para casillas vacías */
         .slot::before { content: attr(data-index); color: #333; font-size: 1.1rem; font-weight: bold; position: absolute; }
         .slot.active::before { display: none; }
         
-        /* Recuperación del logo blanco */
-        .slot img { width: 65%; display: none; position: relative; z-index: 2; }
+        /* Logo e de ECOS (ecos-logo-white.png) */
+        .slot img { width: 65%; display: none; position: relative; z-index: 2; filter: brightness(0) invert(1); }
         .slot.active img { display: block; }
         
         #qrcode-container { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; margin: 10px 0; }
         
-        .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 1rem; }
-        .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        /* Interfaz */
+        .input-box { background: #121212; border: 1px solid #222; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; }
+        .btn-main { background: var(--ecos-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         .footer { margin-top: 25px; font-size: 0.65rem; color: #444; }
 
-        /* Estilo para mensaje de felicitaciones profesional */
-        #success-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+        /* CORRECCIÓN MENSAJE DE FELICITACIONES PROFESIONAL (image_10.png) */
+        #success-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .success-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 30px; padding: 30px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .success-card h2 { color: var(--ecos-pink); font-size: 1.8rem; margin: 0 0 15px 0; font-weight: 400; }
+        .success-card p { font-size: 0.95rem; line-height: 1.6; color: #ccc; margin-bottom: 25px; }
     </style>
 </head>
 <body>
     <div id="success-overlay">
-        <div class="rounded-logo-box"><img src="ecos-horizontal-pink.png" style="width: 150px;"></div>
-        <h1 style="color: var(--ecos-pink); font-size: 2rem;">¡Enhorabuena!</h1>
-        <p style="font-size: 1.1rem; line-height: 1.6;">Has consolidado tu lealtad con nosotros. Este activo de alto rendimiento ha llegado a su máximo potencial. Reclama tu recompensa con nuestro equipo.</p>
-        <button class="btn-main" onclick="location.reload()" style="margin-top: 30px; width: auto; padding: 15px 40px;">Entendido</button>
+        <div class="success-card">
+            <div class="rounded-logo-box"><img src="ecos-horizontal-pink.png" style="width: 130px;"></div>
+            <h2>¡Enhorabuena!</h2>
+            <p>Has consolidado tu lealtad con nosotros. Este activo de alto rendimiento ha llegado a su máximo potencial. Reclama tu recompensa con nuestro equipo.</p>
+            <button class="btn-main" onclick="location.reload()" style="width: auto; padding: 15px 40px;">Entendido</button>
+        </div>
     </div>
 
     <div class="container">
         <div id="authPanel">
-            <div style="margin-bottom: 30px;"><img src="ecos-horizontal-pink.png" style="width: 140px;"></div>
-            <h3 style="font-weight: 400; margin-bottom: 20px; color: #888;">Ingreso Exclusivo</h3>
+            <div class="login-logo-box">
+                <img src="ecos-horizontal-pink.png" class="login-logo" alt="ECOS">
+            </div>
+            <h3 style="font-weight: 400; margin-bottom: 20px;">Ingreso Exclusivo</h3>
             <input type="tel" id="userPhone" class="input-box" placeholder="WhatsApp (Ej: 0979010077)">
             <input type="password" id="userPin" class="input-box" placeholder="PIN de 4 dígitos" maxlength="4">
             <button class="btn-main" onclick="accessSystem()">Ingresar</button>
@@ -58,13 +72,13 @@
             <div class="card">
                 <div class="rounded-logo-box"><img src="ecos-horizontal-pink.png" class="card-logo"></div>
                 <div class="stamp-grid" id="stampGrid"></div>
-                <p id="counterLabel" style="color: var(--ecos-pink); font-weight: bold; font-size: 0.9rem;">Cargando activo...</p>
+                <p id="counterLabel" style="color: var(--ecos-pink); font-weight: bold; font-size: 0.9rem;">0 de 8 sellos de autor</p>
                 <div id="qrcode-container"><canvas id="qr-canvas"></canvas></div>
                 <p style="color:#444; font-size:0.6rem; font-weight:bold; letter-spacing: 2px;">VISIÓN • IMPACTO • PERMANENCIA</p>
             </div>
             <button class="btn-main" style="margin-top:20px; background:#111; border: 1px solid #222;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
-        <div class="footer">Desarrollado por <span>ORCA Studios</span></div>
+        <div class="footer">Hecho por <span>ORCA Studios</span></div>
     </div>
 
     <script>
@@ -74,35 +88,14 @@
 
         function accessSystem() {
             const phone = document.getElementById('userPhone').value.trim();
-            const pin = document.getElementById('userPin').value.trim();
+            if(phone.length < 9) return alert("Número incompleto");
 
-            if(phone.length < 9 || pin.length < 4) return alert("Por favor, completa tus datos correctamente.");
-
-            const userRef = db.ref('ecos_users/' + phone);
-
-            userRef.once('value', (snapshot) => {
-                const userData = snapshot.val();
-
-                if (!userData) {
-                    // REGISTRO PRIMERA VEZ: Se guarda el PIN para siempre
-                    userRef.set({ pin: pin, stamps: 0 }).then(() => login(phone));
-                } else {
-                    // VALIDACIÓN DE PIN EXISTENTE
-                    if (userData.pin === pin) {
-                        login(phone);
-                    } else {
-                        alert("El PIN ingresado es incorrecto para este número.");
-                    }
-                }
-            });
-        }
-
-        function login(phone) {
             document.getElementById('authPanel').style.display = 'none';
             document.getElementById('cardPanel').style.display = 'block';
             QRCode.toCanvas(document.getElementById('qr-canvas'), phone, { width: 140, margin: 1 });
 
             const userRef = db.ref('ecos_users/' + phone);
+
             userRef.child('stamps').on('value', (snap) => {
                 const count = snap.val() || 0;
                 document.getElementById('counterLabel').innerText = `${count} de 8 sellos de autor`;
@@ -118,12 +111,11 @@
                     grid.appendChild(slot);
                 }
 
-                // MENSAJE PROFESIONAL DE FELICITACIONES
+                // MENSAJE PROFESIONAL PULIDO
                 if (count >= 8) {
                     setTimeout(() => {
-                        document.getElementById('success-overlay').style.flexDirection = 'column';
                         document.getElementById('success-overlay').style.display = 'flex';
-                    }, 500);
+                    }, 800);
                 }
             });
         }
