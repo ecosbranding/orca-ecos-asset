@@ -1,8 +1,16 @@
 {
   "name": "ECOS",
   "short_name": "ECOS",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "index.html",
   "display": "standalone",
-  "icons": [ { "src": "icono-blanco.png", "sizes": "512x512", "type": "image/png" } ]
+  "background_color": "#000000",
+  "theme_color": "#ff5a81",
+  "icons": [
+    {
+      "src": "ecos-logo-white.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
